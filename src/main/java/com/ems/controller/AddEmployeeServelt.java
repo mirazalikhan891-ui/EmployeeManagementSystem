@@ -39,7 +39,7 @@ public class AddEmployeeServelt extends HttpServlet {
 
         if (success) {
             // Insert successful hole list page-e ferot pathao
-            response.sendRedirect("dashboard.jsp");
+            response.sendRedirect("add-employee.jsp?status=success");
         } else {
             // Fail hole error message
             response.sendRedirect("add-employee.jsp?error=failed");

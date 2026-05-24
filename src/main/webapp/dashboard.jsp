@@ -1,304 +1,89 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8"
-    pageEncoding="UTF-8"%>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%
+    // সেশন চেক
+    String currentRole = (String) session.getAttribute("role");
 
-<%@ page import="com.ems.dao.EmployeeDAO" %>
-<%@ page import="com.ems.model.Employee" %>
-<%@ page import="java.util.List" %>
+    String currentUsername = (String) session.getAttribute("username");
+    if (currentRole == null || currentUsername == null) {
+        response.sendRedirect("login.jsp");
+        return;
+    }
+
+    int totalEmployeesCount = 0;
+    int lastMonthTotal = 0; 
+    double growthPercent = 0.0;
+    
+    // DAO অবজেক্ট তৈরি
+    com.ems.dao.EmployeeDAO countDao = new com.ems.dao.EmployeeDAO();
+    
+    try {
+        // বর্তমান এমপ্লয়ি সংখ্যা
+        java.util.List<com.ems.model.Employee> listForCount = countDao.getAllEmployees();
+        if (listForCount != null) {
+            totalEmployeesCount = listForCount.size();
+        }
+        
+        // গত মাসের এমপ্লয়ি সংখ্যা (ডাটাবেজ থেকে)
+        lastMonthTotal = countDao.getLastMonthEmployeeCount();
+        
+        // গ্রোথ ক্যালকুলেশন
+        if (lastMonthTotal > 0) {
+            growthPercent = ((double)(totalEmployeesCount - lastMonthTotal) / lastMonthTotal) * 100;
+        } else if (totalEmployeesCount > 0) {
+            // যদি গত মাসে ০ থাকে কিন্তু এই মাসে এমপ্লয়ি থাকে, তবে ১০০% গ্রোথ
+            growthPercent = 100.0;
+        }
+        
+    } catch(Exception e) {
+        e.printStackTrace();
+    }
+    
+    // রিকোয়েস্ট স্কোপে ডেটা সেট করা
+    request.setAttribute("LIVE_EMP_COUNT", totalEmployeesCount);
+    request.setAttribute("EMP_GROWTH_VAL", String.format("%.1f", growthPercent));
+%>
 
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Dashboard - Employee List</title>
+    <meta charset="UTF-8">
+    <title>Enterprise Management System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
-<style>
-
-table{
-    width:80%;
-    margin:20px auto;
-    border-collapse:collapse;
-    font-family:Arial, sans-serif;
-}
-
-table tr:nth-child(even){
-    background-color:#f2f2f2;
-}
-
-th{
-    background-color:#28a745;
-    color:white;
-}
-
-th, td{
-    border:1px solid #ddd;
-    padding:12px;
-    text-align:left;
-}
-
-a{
-    text-decoration:none;
-}
-
-</style>
-
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9 !important;
+        }
+    </style>
 </head>
-<body>
-
-<h2 style="text-align:center;">
-    Welcome to Employee Management System
-</h2>
-
-<div style="text-align:center; margin-bottom:15px;">
-
-    <a href="add-employee.jsp"
-       style="padding:10px 15px;
-       background:#007bff;
-       color:white;
-       border-radius:4px;
-       font-weight:bold;">
-
-       + Add New Employee
-    </a>
-
-</div>
-
-<%
-
-// Current Page
-int pageId = 1;
-
-if(request.getParameter("page") != null){
-
-    pageId = Integer.parseInt(request.getParameter("page"));
-
-}
-
-// Pagination Settings
-int totalRecordPerPage = 3;
-
-int startRecord = (pageId - 1) * totalRecordPerPage;
-
-// DAO Object
-EmployeeDAO dao = new EmployeeDAO();
-
-// Employee List
-List<Employee> list =
-dao.getEmployeesByPage(startRecord, totalRecordPerPage);
-
-// Serial Number
-int serial = startRecord + 1;
-
-%>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Serial No</th>
-<th>Name</th>
-<th>Email</th>
-<th>Department</th>
-<th>Salary</th>
-<th>Role</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<%
-
-if(list != null && !list.isEmpty()){
-
-    for(Employee e : list){
-
-%>
-
-<tr>
-
-<td><%= serial++ %></td>
-
-<td><%= e.getName() %></td>
-
-<td><%= e.getEmail() %></td>
-
-<td><%= e.getDepartment() %></td>
-
-<td><%= e.getSalary() %></td>
-
-<td><%= e.getRole() %></td>
-
-<td>
-
-<a href="edit-employee.jsp?id=<%= e.getId() %>"
-   style="color:#007bff; font-weight:bold; margin-right:10px;">
-
-   Edit
-
-</a>
-
-<a href="DeleteEmployeeServlet?id=<%= e.getId() %>"
-   onclick="return confirm('Are you sure you want to delete this employee?')"
-   style="color:red; font-weight:bold;">
-
-   Delete
-
-</a>
-
-</td>
-
-</tr>
-
-<%
-
-    }
-
-}else{
-
-%>
-
-<tr>
-
-<td colspan="7"
-    style="text-align:center; padding:20px; color:#666;">
-
-    No Records Found!
-
-</td>
-
-</tr>
-
-<%
-
-}
-
-%>
-
-</tbody>
-
-</table>
-
-
-<!-- Pagination -->
-
-<div style="width:80%;
-margin:20px auto;
-text-align:center;
-font-family:Arial, sans-serif;">
-
-<%
-
-int totalRows =  dao.getEmployeeCount();
-
-int totalPages =
-(int)Math.ceil((double)totalRows / totalRecordPerPage);
-
-%>
-
-
-<!-- Previous Button -->
-
-<%
-
-if(pageId > 1){
-
-%>
-
-<a href="dashboard.jsp?page=<%= pageId - 1 %>"
-   style="padding:8px 12px;
-   margin:0 4px;
-   border:1px solid #ccc;
-   background:#fff;
-   color:#333;">
-
-   Previous
-
-</a>
-
-<%
-
-}
-
-%>
-
-
-<!-- Page Numbers -->
-
-<%
-
-for(int i = 1; i <= totalPages; i++){
-
-    if(i == pageId){
-
-%>
-
-<span style="padding:8px 12px;
-margin:0 4px;
-background:#28a745;
-color:white;
-font-weight:bold;
-border-radius:4px;
-border:1px solid #28a745;">
-
-<%= i %>
-
-</span>
-
-<%
-
-    }else{
-
-%>
-
-<a href="dashboard.jsp?page=<%= i %>"
-   style="padding:8px 12px;
-   margin:0 4px;
-   border:1px solid #ccc;
-   background:#fff;
-   color:#333;">
-
-   <%= i %>
-
-</a>
-
-<%
-
-    }
-
-}
-
-%>
-
-
-<!-- Next Button -->
-
-<%
-
-if(pageId < totalPages){
-
-%>
-
-<a href="dashboard.jsp?page=<%= pageId + 1 %>"
-   style="padding:8px 12px;
-   margin:0 4px;
-   border:1px solid #ccc;
-   background:#fff;
-   color:#333;">
-
-   Next
-
-</a>
-
-<%
-
-}
-
-%>
-
+<body class="bg-[#f1f5f9] text-slate-800 min-h-screen overflow-x-hidden antialiased">
+
+<div class="relative z-10">
+   
+    <%@ include file="components/navbar.jsp" %>
+
+   
+    <main class="p-6 max-w-[1700px] mx-auto">
+        <%
+        // রোলের ওপর ভিত্তি করে নিখুঁত ড্যাশবোর্ড লোড হবে, রিফ্রেশ করলেও চেঞ্জ হবে না
+        if (currentRole.equalsIgnoreCase("Admin")) {
+        %>
+            <jsp:include page="admin-dashboard.jsp" />
+        <%
+        } else {
+        %>
+            <jsp:include page="employee-dashboard.jsp" />
+        <%
+        }
+        %>
+    </main>
 </div>
 
 </body>

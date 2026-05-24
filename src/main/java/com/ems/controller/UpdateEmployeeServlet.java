@@ -31,8 +31,12 @@ public class UpdateEmployeeServlet extends HttpServlet {
         emp.setRole(role);
 
         EmployeeDAO dao = new EmployeeDAO();
-        dao.updateEmployee(emp);
-
-        response.sendRedirect("dashboard.jsp");
+       boolean success= dao.updateEmployee(emp);
+        if(success) {
+        	response.sendRedirect("employee-details.jsp?status=update");
+        }
+        else {
+        	response.sendRedirect("edit-employee.jsp?id="+ id + "&status=failed");
+        }
     }
 }

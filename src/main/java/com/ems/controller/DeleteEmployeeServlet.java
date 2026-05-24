@@ -26,6 +26,11 @@ public class DeleteEmployeeServlet extends HttpServlet {
 
         System.out.println(success);
 
-        response.sendRedirect("dashboard.jsp");
+        if(success) {
+        	response.sendRedirect("employee-details.jsp?status=deleted");
+        }
+        else {
+        	response.sendRedirect("employee-details.jsp?status=failed");
+        }
     }
 }

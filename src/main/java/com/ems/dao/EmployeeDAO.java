@@ -58,16 +58,28 @@ public class EmployeeDAO {
         }
         return list;
     } 
+    
+    
+    public int getLastMonthEmployeeCount() {
+        int count = 0;
+        try {
+            Connection con = DBConnection.getConnection();
+            // কুয়েরি: যেই এমপ্লয়িরা গত মাসে জয়েন করেছে তাদের গুনবে
+            String query = "SELECT COUNT(*) FROM employees WHERE MONTH(joining_date) = MONTH(CURRENT_DATE - INTERVAL 1 MONTH)";
+            java.sql.PreparedStatement ps = con.prepareStatement(query);
+            java.sql.ResultSet rs = ps.executeQuery();
+            if (rs.next()) count = rs.getInt(1);
+        } catch (Exception e) { e.printStackTrace(); }
+        return count;
+    }
 
     public List<Employee> getEmployeesByPage(int start, int total) {
-        // NULL-er jaygaye ekhaney object initialize thaktei hobe
         List<Employee> list = new ArrayList<>(); 
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
         try {
             con = DBConnection.getConnection();
-            // Spelt check strictly 'employess' (double s) tomar DB onusare
             String query = "SELECT * FROM employees LIMIT ?, ?";
             ps = con.prepareStatement(query);
             ps.setInt(1, start);
