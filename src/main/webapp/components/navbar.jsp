@@ -1,113 +1,141 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@ page import="java.util.Calendar" %>
 <%
-   
-    if (currentUsername == null || currentUsername.trim().isEmpty()) {
-        currentUsername = "System User";
+    // সেশন থেকে ইউজারনেম এবং রোল গেট করা
+    String navUsername = (session.getAttribute("username") != null) ? (String)session.getAttribute("username") : "User";
+    String navRole = (session.getAttribute("role") != null) ? (String)session.getAttribute("role") : "Employee";
+    
+    com.ems.model.Employee navEmp = (com.ems.model.Employee) session.getAttribute("user");
+    String navImg = (navEmp != null && navEmp.getImagePath() !=null)
+    		? request.getContextPath() + "/" + navEmp.getImagePath()
+    		:"https://i.pravatar.cc/300?img=12";
+    
+    // ১. ডাইনামিক রোল টেক্সট নির্ধারণ (Admin নাকি Employee)
+    String displayRoleName = "Employee";
+    if (navRole.equalsIgnoreCase("Admin")) {
+        displayRoleName = "Admin";
     }
-    if (currentRole == null || currentRole.trim().isEmpty()) {
-        currentRole = "Staff Member";
+    
+    String displayName = (String) session.getAttribute("displayName");
+    if(displayName == null){
+    	displayName = (String) session.getAttribute("username");
     }
-%>
-<nav class="flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm" style="font-family: 'Times New Roman', Times, serif !important;">
 
-    <!-- Left Brand & Welcome Message with Dynamic Greeting Title -->
-    <div class="flex items-center gap-4 shrink-0">
-        <div class="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold shadow-md shadow-indigo-100">
-            <%= currentUsername.substring(0, 1).toUpperCase() %>
+    // ২. সার্ভার টাইম ট্র্যাকিং এবং ডাইনামিক গ্রিটিংস (Time-Based Greeting Engine)
+    Calendar cal = Calendar.getInstance();
+    int hour = cal.get(Calendar.HOUR_OF_DAY);
+    String timeGreeting = "Good Morning"; // Default
+
+    if (hour >= 12 && hour < 16) {
+        timeGreeting = "Good Afternoon";
+    } else if (hour >= 16 && hour < 20) {
+        timeGreeting = "Good Afternoon"; 
+    } else if (hour >= 20 || hour < 4) {
+        timeGreeting = "Good Night";
+    } else if (hour >= 4 && hour < 12) {
+        timeGreeting = "Good Morning";
+    }
+
+    // ৩. রোলের ওপর ভিত্তি করে ডাইনামিক সার্চ প্লেসহোল্ডার টেক্সট
+    String searchPlaceholder = "Search tasks, metrics, workspace reports...";
+    if (navRole.equalsIgnoreCase("Admin")) {
+        searchPlaceholder = "Search employees, system metrics, reports...";
+    }
+    
+    // ডিসপ্লে রোল ট্র্যাকার ম্যাপিং
+    String subTitleRole = navRole.equalsIgnoreCase("Admin") ? "SYSTEM DIRECTOR" : "TEAM MEMBER";
+%>
+
+<!-- MODERN RESPONSIVE FLEX LAYOUT CONTEXT NAVBAR WRAPPER -->
+<header class="w-full bg-[#ffffff] border-b border-slate-200/80 px-4 py-2.5 flex items-center justify-between gap-4 select-none relative z-50 premium-times-layout">
+    
+    <!-- LEFT UNIT: DYNAMIC ROLE GREETING & LIVE DIGITAL TICKER -->
+    <div class="flex items-center gap-3 shrink-0">
+        <div class="w-10 h-10 bg-blue-600 flex items-center justify-center rounded-xl text-white font-black text-sm shadow-md shadow-blue-600/10">
+            <%= displayRoleName.substring(0, 1).toUpperCase() %>
         </div>
-        <div>
-            <h1 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                Good Morning, <%= currentRole %> 👋
+        <div class="flex flex-col text-left">
+            <!-- LIVE DYNAMIC GREETING -->
+            <h1 class="text-sm sm:text-base font-black text-slate-800 flex items-center gap-1.5 leading-tight">
+                <%= timeGreeting %>, <%= displayRoleName %> <span class="text-base sm:text-lg">👋</span>
             </h1>
-            <p class="text-xs font-medium text-slate-400 mt-0.5 flex items-center gap-2">
-                <span>Here's your operational status for today.</span>
-                <span class="text-slate-300">|</span>
-                <!-- Real-Time Digital Clock Container -->
-                <span id="liveClockDisplay" class="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100/50"></span>
+            <p class="text-[10px] sm:text-xs text-slate-400 font-bold flex items-center gap-1 mt-0.5">
+                Here's your operational status for today. 
+                <!-- 🚨 LIVE DIGITAL CLOCK TERMINAL BLOCK: Seconds automatically tik-tik korbe -->
+                <span id="liveNavbarClock" class="text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded font-mono font-bold border border-emerald-100 hidden sm:inline-block">
+                    Loading Time...
+                </span>
             </p>
         </div>
     </div>
 
-    <!-- Center Section: Empty Space Keeper to balance layout -->
-    <div class="flex-1"></div>
+    <!-- CENTER UNIT: DYNAMIC SEARCH BAR -->
+    <div class="hidden lg:flex items-center relative w-full max-w-md mx-4">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 text-slate-400 text-xs"></i>
+        <input type="text" placeholder="<%= searchPlaceholder %>" 
+               class="w-full h-9 bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-4 text-xs font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-amber-500/40 focus:bg-white transition-all">
+    </div>
 
-    <!-- Right Interaction Suite -->
-    <div class="flex items-center gap-6 shrink-0">
+    <!-- RIGHT UNIT: USER LIVE CONFIGURATION PROFILE -->
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto">
         
-        <!-- Premium Minimal Search Bar -->
-        <div class="w-[360px] h-11 rounded-xl bg-slate-50 border border-slate-200 flex items-center px-4">
-            <span class="text-slate-400 mr-2 shrink-0">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-            </span>
-            <input 
-                type="text" 
-                placeholder="Search employees, system metrics, reports..." 
-                class="bg-transparent outline-none w-full text-sm text-slate-700 placeholder:text-slate-400">
-        </div>
-
-        <!-- Notification Bell -->
-        <button class="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center relative shadow-sm text-slate-500 hover:text-slate-800 transition-colors">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <span class="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white"></span>
+        <button class="w-9 h-9 bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center justify-center rounded-xl text-slate-500 relative transition-transform active:scale-95">
+            <i class="fa-solid fa-bell text-xs"></i>
+            <span class="absolute top-2 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
         </button>
 
-        <!-- Dynamic Profile Card Group -->
-        <div class="flex items-center gap-3 border-l border-slate-200/80 pl-6">
-            <img src="https://i.pravatar.cc/150?img=12" class="w-11 h-11 rounded-full border border-slate-200 shadow-sm object-cover">
-            <div>
-                <h3 class="text-sm font-bold text-slate-800 leading-none">
-                    <%= currentUsername %>
-                </h3>
-                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mt-1">
-                    <%= currentRole.equalsIgnoreCase("Admin") ? "System Director" : "Team Member" %>
-                </p>
+        <div class="flex items-center gap-2 pl-1.5 border-l border-slate-200/80">
+            <img src="<%= navImg %>" alt="Nav Avatar picture tools" 
+                 class="w-8 h-8 rounded-full border border-amber-400/30 object-cover shadow-sm">
+            
+            <div class="hidden md:flex flex-col text-left max-w-[120px]">
+                <h4 class="text-xs font-black text-slate-800 truncate leading-tight uppercase tracking-wide"><%= displayName %></h4>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate"><%= subTitleRole %></p>
             </div>
         </div>
 
-        
-        <button onclick="executeSecureLogout()" title="Terminate Session" class="w-11 h-11 border border-rose-200 bg-rose-50/50 hover:bg-rose-100 text-rose-600 active:scale-95 transition-all flex items-center justify-center rounded-xl shadow-sm" style="border-radius: 12px !important;">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-        </button>
+        <!-- LOGOUT LINK BUTTON CONTAINER -->
+        <a href="login.jsp" 
+           class="h-9 px-3 rounded-xl bg-gradient-to-r from-rose-50 to-rose-100/60 hover:from-rose-100 hover:to-rose-200/50 border border-rose-200/60 text-rose-600 font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+           title="Secure Sign Out Session">
+            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+            <span class="hidden sm:inline">Logout</span>
+        </a>
 
     </div>
-</nav>
+</header>
 
-<!-- JavaScript Engine for Live Clock & Safe Redirect Logout -->
+<!-- 🚨 REAL-TIME LIVE CLOCK ENGINE JAVASCRIPT INJECTION 🚨 -->
 <script>
-    
-    
-    function executeSecureLogout() {
-       
-        window.location.replace("login.jsp");
-    }
+    function runLiveNavbarClock() {
+        const timeBox = document.getElementById("liveNavbarClock");
+        if (!timeBox) return;
 
-    function startLiveDashboardClock() {
-        const clockElement = document.getElementById('liveClockDisplay');
-        if (!clockElement) return;
-
-        function updateClock() {
+        setInterval(() => {
             const now = new Date();
-            let options = { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit', 
-                hour12: true 
-            };
-            clockElement.innerText = now.toLocaleTimeString('en-US', options);
-        }
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
 
-        updateClock();
-        setInterval(updateClock, 1000);
+            // Convert to 12-hour format standard cleanly
+            hours = hours % 12;
+            hours = hours ? hours : 12; 
+            
+            // Padding configuration tracking leading zero mapping
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+
+            // Strict rendering matching premium framework UI
+            timeBox.textContent = hours + ":" + minutes + ":" + seconds + " " + ampm;
+        }, 1000); // 1-second dynamic frequency updater interval loop
     }
 
-    document.addEventListener('DOMContentLoaded', startLiveDashboardClock);
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        startLiveDashboardClock();
+    // Initialize clock worker node safely after window thread compilation
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", runLiveNavbarClock);
+    } else {
+        runLiveNavbarClock();
     }
 </script>

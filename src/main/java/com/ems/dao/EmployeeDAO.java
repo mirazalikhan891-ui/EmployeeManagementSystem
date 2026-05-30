@@ -27,6 +27,8 @@ public class EmployeeDAO {
                 emp.setName(rs.getString("name"));
                 emp.setRole(rs.getString("role"));
                 emp.setUsername(rs.getString("username"));
+                emp.setImagePath(rs.getString("image_path"));
+                emp.setDepartment(rs.getString("department"));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,6 +53,7 @@ public class EmployeeDAO {
                 emp.setDepartment(rs.getString("department"));
                 emp.setSalary(rs.getDouble("salary"));
                 emp.setRole(rs.getString("role"));
+                emp.setImagePath(rs.getString("image_path"));
                 list.add(emp);
             }
         } catch (Exception e) {
@@ -277,7 +280,11 @@ public boolean updateEmployee(Employee emp) {
  return status;
 }
 
+
+
 }
+
+
 
 				
 

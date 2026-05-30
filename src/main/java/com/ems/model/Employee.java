@@ -9,7 +9,7 @@ public class Employee {
     private String username;
     private String password;
     private String role;
-
+    private String image_path;
     
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -27,4 +27,10 @@ public class Employee {
     public void setPassword(String password) { this.password = password; }
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
+    public String getImagePath() {
+    	return image_path;
+    }
+    public void setImagePath(String image_path) {
+    	this.image_path = image_path;
+    }
 }

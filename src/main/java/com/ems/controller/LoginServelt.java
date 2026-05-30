@@ -17,35 +17,28 @@ public class LoginServelt extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-    protected void doPost(HttpServletRequest request,
-                          HttpServletResponse response)
-            throws ServletException, IOException {
-
-        // form data নেওয়া
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // ১. Form theke username ar password nibe
         String user = request.getParameter("username");
         String pass = request.getParameter("password");
 
-        // DAO object
         EmployeeDAO dao = new EmployeeDAO();
-
-        // login check
+        // ২. Database-e check korbe
         Employee emp = dao.login(user, pass);
 
         if (emp != null) {
-
-            // session create
+            // ৩. Session e username ar display name set korbe
             HttpSession session = request.getSession();
-
-            session.setAttribute("username", emp.getName());
+            session.setAttribute("username", user);       // Query korar jonno
+            session.setAttribute("displayName", emp.getName()); // UI-e dekhano-r jonno
             session.setAttribute("role", emp.getRole());
             session.setAttribute("user", emp);
-
-            // dashboard এ পাঠানো
+            session.setAttribute("id", emp.getId());
+            
+            System.out.println("Login Success for: " + user); // Console-e debug korar jonno
             response.sendRedirect("dashboard.jsp");
-
         } else {
-
-            // login fail
+            // ৪. Login fail hole
             response.sendRedirect("login.jsp?msg=invalid");
         }
     }
